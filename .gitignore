@@ -1,3 +1,7 @@
 .idea
 __pycache__
-.env
+with_flask/.env
+blog_latest/.idea
+blog_latest/.venv
+blog_latest/.env
+blog_latest
