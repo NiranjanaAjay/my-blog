@@ -118,9 +118,14 @@ def edit(post_id):
     edit_post = True
     return render_template("make-post.html", form=edit_form, edit=edit_post)
 
-# TODO: delete_post() to remove a blog post from the database
+@app.route("/delete/<int:post_id>")
+def delete(post_id):
+    post = db.session.get(BlogPost, post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return redirect("/")
 
-# Below is the code from previous lessons. No changes needed.
+
 @app.route("/about")
 def about():
     return render_template("about.html")
