@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, redirect, url_for, request
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
@@ -89,13 +90,33 @@ def add_new_post():
     return render_template("make-post.html", form=form, edit = edit_post)
 
 
-# TODO: edit_post() to change an existing blog post
-@app.route('/edit/<int:post_id>')
+@app.route('/edit/<int:post_id>', methods=['GET','POST'])
 def edit(post_id):
-    form = NewPost()
+    if request.method == 'POST':
+        post = db.session.get(BlogPost,post_id)
+        if request.form.get("img")=='':
+            image = ("https://images.unsplash.com/photo-1680299568009-09a6f8383061?q=80&w=1074&auto=format&fit"
+                     "=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+        else:
+            image = request.form.get("img")
+        post.title = request.form.get("title")
+        post.subtitle = request.form.get("subtitle")
+        post.img_url = image
+        post.author = request.form.get("author")
+        post.body = request.form.get("body")
+        db.session.commit()
+        return redirect(f"/post/{post_id}")
+
+    post = db.session.execute(db.select(BlogPost).where(BlogPost.id == post_id)).scalar()
+    edit_form = NewPost(
+        title=post.title,
+        subtitle=post.subtitle,
+        img_url=post.img_url,
+        author=post.author,
+        body=post.body
+    )
     edit_post = True
-    requested_post = db.session.execute(db.select(BlogPost).where(BlogPost.id == post_id)).scalar()
-    return render_template("make-post.html", form=form, edit=edit_post)
+    return render_template("make-post.html", form=edit_form, edit=edit_post)
 
 # TODO: delete_post() to remove a blog post from the database
 
