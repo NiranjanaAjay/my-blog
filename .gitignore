@@ -1,7 +1,7 @@
 .idea
 __pycache__
 with_flask/.env
-blog_latest/.idea
-blog_latest/.venv
-blog_latest/.env
-blog_latest/.DS_Store
+prev_work/blog_latest/.idea
+prev_work/blog_latest/.venv
+prev_work/blog_latest/.env
+prev_work/blog_latest/.DS_Store
