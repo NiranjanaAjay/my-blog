@@ -18,11 +18,21 @@ include "header.html" %}
   </div>
 </header>
 
+{% with messages = get_flashed_messages()%}
+    {% if messages %}
+      <ul class="flashes">
+        {% for message in messages %}
+          <li style="color:red"> {{message}} </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
 <main class="mb-4">
   <div class="container">
     <div class="row">
       <div class="col-lg-8 col-md-10 mx-auto">
-        <!--TODO: render your registration form here-->
+        {{render_form(form, novalidate=True)}}
       </div>
     </div>
   </div>

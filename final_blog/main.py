@@ -1,5 +1,5 @@
 from datetime import date
-from flask import Flask, abort, render_template, redirect, url_for, flash
+from flask import Flask, abort, render_template, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
 from flask_gravatar import Gravatar
@@ -10,7 +10,7 @@ from sqlalchemy import Integer, String, Text
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
-from forms import CreatePostForm
+from forms import CreatePostForm, RegisterForm
 
 
 app = Flask(__name__)
@@ -43,17 +43,40 @@ class BlogPost(db.Model):
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
 
-# TODO: Create a User table for all your registered users. 
+# TODO: Create a User table for all your registered users.
+class User(UserMixin,db.Model):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(250), nullable=False)
+    name: Mapped[str] = mapped_column(String(250), nullable=False)
 
 
 with app.app_context():
     db.create_all()
 
 
-# TODO: Use Werkzeug to hash the user's password when creating a new user.
-@app.route('/register')
+@login_manager.user_loader
+def load_user(user_id):
+    return db.get_or_404(User, int(user_id))
+
+
+@app.route('/register', methods=["GET","POST"])
 def register():
-    return render_template("register.html")
+    form = RegisterForm()
+    if form.validate_on_submit():
+        if db.session.execute(db.select(User).where(User.email == request.form["email"])).scalar():
+            flash("Email already registered. Please log in.")
+            return redirect(url_for('login'))
+        user = User()
+        user.email = request.form["email"],
+        user.password= generate_password_hash(request.form["password"], method='scrypt', salt_length=16),
+        user.name = request.form["name"]
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('get_all_posts'))
+    return render_template("register.html", form =form)
 
 
 # TODO: Retrieve a user from the database based on their email. 
