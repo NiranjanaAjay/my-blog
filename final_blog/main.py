@@ -3,7 +3,7 @@ from flask import Flask, abort, render_template, redirect, url_for, flash, reque
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
 from flask_gravatar import Gravatar
-from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
+from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Text
@@ -20,7 +20,6 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 ckeditor = CKEditor(app)
 Bootstrap5(app)
 
-# TODO: Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -45,9 +44,8 @@ class BlogPost(db.Model):
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
 
-# TODO: Create a User table for all your registered users.
 class User(UserMixin,db.Model):
-    __tablename__ = "users"
+    __tablename__ = "user"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
@@ -70,10 +68,10 @@ def register():
         if db.session.execute(db.select(User).where(User.email == request.form["email"])).scalar():
             flash("Email already registered. Please log in.")
             return redirect(url_for('login'))
-        user = User()
-        user.email = request.form["email"],
-        user.password= generate_password_hash(request.form["password"], method='scrypt', salt_length=16),
-        user.name = request.form["name"]
+        user = User(
+            email = request.form["email"],
+            password= generate_password_hash(request.form["password"], method='scrypt', salt_length=16),
+            name = request.form["name"])
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -81,10 +79,20 @@ def register():
     return render_template("register.html", form =form)
 
 
-# TODO: Retrieve a user from the database based on their email. 
-@app.route('/login')
+@app.route('/login', methods=['GET','POST'])
 def login():
-    return render_template("login.html")
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = request.form["email"]
+        password = request.form["password"]
+        current_user = db.session.execute(db.select(User).where(User.email == email)).scalar()
+        if current_user and check_password_hash(current_user.password,password):
+            login_user(current_user)
+            return redirect(url_for('get_all_posts'))
+        flash("Email or password has been entered wrong, try again!")
+        return redirect(url_for('login'))
+
+    return render_template("login.html", form=form)
 
 
 @app.route('/logout')
