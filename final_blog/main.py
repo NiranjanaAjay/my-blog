@@ -82,6 +82,16 @@ def load_user(user_id):
     return db.get_or_404(User, int(user_id))
 
 
+gravatar = Gravatar(app,
+                    size=100,
+                    rating='g',
+                    default='retro',
+                    force_default=False,
+                    force_lower=False,
+                    use_ssl=False,
+                    base_url=None)
+
+
 def admin_only(function):
     @wraps(function)
     def wrapper_function(*args, **kwargs):
@@ -149,9 +159,17 @@ def show_post(post_id):
             flash("Login or register to comment!")
             return redirect(url_for('login'))
         else:
-            comment = request.form["body"]
+            comment = Comment()
+            comment.author_id = current_user.id
+            comment.content = request.form["body"]
+            comment.post_id = post_id
+            db.session.add(comment)
+            db.session.commit()
 
     requested_post = db.get_or_404(BlogPost, post_id)
+    all_comments = db.session.execute(db.select(Comment).where(Comment.post_id==post_id)).scalars()
+    if all_comments:
+        return render_template("post.html", post=requested_post, form=form, comments=all_comments)
     return render_template("post.html", post=requested_post, form=form)
 
 
