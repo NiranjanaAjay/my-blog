@@ -10,7 +10,7 @@ from sqlalchemy import Integer, String, Text, ForeignKey
 from typing import List
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CreatePostForm, RegisterForm, LoginForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 import os
 from dotenv import load_dotenv
 
@@ -42,6 +42,7 @@ class User(UserMixin,db.Model):
     name: Mapped[str] = mapped_column(String(250), nullable=False)
 
     posts = relationship("BlogPost",back_populates="author")
+    comments = relationship("Comment", back_populates="author")
 
 
 class BlogPost(db.Model):
@@ -57,6 +58,20 @@ class BlogPost(db.Model):
     body: Mapped[str] = mapped_column(Text, nullable=False)
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
+    comments = relationship("Comment", back_populates="post")
+
+
+class Comment(db.Model):
+    __tablename__ = "comment"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("user.id"))
+    author = relationship("User", back_populates="comments")
+
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    post_id:Mapped[int] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
+    post = relationship("BlogPost", back_populates="comments")
 
 with app.app_context():
     db.create_all()
@@ -126,10 +141,18 @@ def get_all_posts():
 
 
 # TODO: Allow logged-in users to comment on posts
-@app.route("/post/<int:post_id>")
+@app.route("/post/<int:post_id>", methods=['GET','POST'])
 def show_post(post_id):
+    form = CommentForm()
+    if form.validate_on_submit():
+        if not current_user.is_authenticated:
+            flash("Login or register to comment!")
+            return redirect(url_for('login'))
+        else:
+            comment = request.form["body"]
+
     requested_post = db.get_or_404(BlogPost, post_id)
-    return render_template("post.html", post=requested_post)
+    return render_template("post.html", post=requested_post, form=form)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
