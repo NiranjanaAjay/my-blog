@@ -6,7 +6,8 @@ from flask_gravatar import Gravatar
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Integer, String, Text, ForeignKey
+from typing import List
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CreatePostForm, RegisterForm, LoginForm
@@ -33,23 +34,28 @@ db.init_app(app)
 
 
 # CONFIGURE TABLES
-class BlogPost(db.Model):
-    __tablename__ = "blog_posts"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
-    subtitle: Mapped[str] = mapped_column(String(250), nullable=False)
-    date: Mapped[str] = mapped_column(String(250), nullable=False)
-    body: Mapped[str] = mapped_column(Text, nullable=False)
-    author: Mapped[str] = mapped_column(String(250), nullable=False)
-    img_url: Mapped[str] = mapped_column(String(250), nullable=False)
-
-
 class User(UserMixin,db.Model):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     name: Mapped[str] = mapped_column(String(250), nullable=False)
+
+    posts = relationship("BlogPost",back_populates="author")
+
+
+class BlogPost(db.Model):
+    __tablename__ = "blog_posts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+    author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("user.id"))
+    author = relationship("User", back_populates="posts")
+
+    title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
+    subtitle: Mapped[str] = mapped_column(String(250), nullable=False)
+    date: Mapped[str] = mapped_column(String(250), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
 
 with app.app_context():
