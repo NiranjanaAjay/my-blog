@@ -6,8 +6,7 @@ from flask_gravatar import Gravatar
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Text, ForeignKey
-from typing import List
+from sqlalchemy import Integer, String, Text
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
@@ -150,7 +149,7 @@ def get_all_posts():
     return render_template("index.html", all_posts=posts)
 
 
-# TODO: Allow logged-in users to comment on posts
+
 @app.route("/post/<int:post_id>", methods=['GET','POST'])
 def show_post(post_id):
     form = CommentForm()
