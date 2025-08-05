@@ -1,11 +1,12 @@
 .idea
 __pycache__
-prev_work
 final_blog/.idea
 final_blog/.venv
 final_blog/instance
 final_blog/.env
 final_blog/.DS_Store
+
+prev_work
 
 
 
