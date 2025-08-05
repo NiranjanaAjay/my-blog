@@ -129,7 +129,8 @@ def login():
         if current_user and check_password_hash(current_user.password,password):
             login_user(current_user)
             return redirect(url_for('get_all_posts'))
-        flash("Email or password has been entered wrong, try again!")
+        flash("Incorrect email or password, t"
+              "ry again!")
         return redirect(url_for('login'))
 
     return render_template("login.html", form=form)

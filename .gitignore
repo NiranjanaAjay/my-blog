@@ -1,13 +1,6 @@
 .idea
 __pycache__
-prev_work/with_flask/.env
-prev_work/blog_latest/.idea
-prev_work/blog_latest/.venv
-prev_work/blog_latest/instance
-prev_work/blog_latest/.env
-prev_work/blog_latest/.DS_Store
-prev_work/blog_latest/__init__.py
-prev_work/__init__.py
+prev_work
 final_blog/.idea
 final_blog/.venv
 final_blog/instance
